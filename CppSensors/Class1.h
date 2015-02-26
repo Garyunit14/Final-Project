@@ -4,7 +4,7 @@ using namespace Windows::Foundation;
 
 namespace CppSensors
 {
-	public delegate void ProcessingFinished(bool matched);
+	public delegate void AccelermeterEvent(double x, double y, double z);
 
 	public ref class CppAccelerometer sealed
 	{
@@ -15,13 +15,11 @@ namespace CppSensors
 		void accChanged(Accelerometer ^sender, AccelerometerReadingChangedEventArgs ^args);
 		void start();
 		void stop();
-		event ProcessingFinished^ onProcessingFinished;
+		event AccelermeterEvent^ onReadingChanged;
 
 	private:
 		Accelerometer^ acc;
 		EventRegistrationToken accToken;
 
-		float accX, accY, accZ;
-		void process();
 	};
 }

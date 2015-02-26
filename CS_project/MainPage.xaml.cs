@@ -31,7 +31,7 @@ namespace CS_project
         private DataReader input;
         private CppAccelerometer myacc;       //Accelerometer object
 
-
+        
         public MainPage()
         {
             this.InitializeComponent();
@@ -45,7 +45,11 @@ namespace CS_project
             // Start connecting to Bluetooth
             DisableAllButtom();
             SetupBluetoothLink();
+            myacc.onReadingChanged += myacc_onReadingChanged;
+
         }
+
+
 
         private async Task<bool> SetupBluetoothLink()
         {
@@ -142,11 +146,6 @@ namespace CS_project
             return line;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            reset();
-        }
-
         private void EnableAllButtom()
         {
             ResetButtom.IsEnabled = true;
@@ -157,5 +156,28 @@ namespace CS_project
             ResetButtom.IsEnabled = false;
         }
 
+        private void Reset_Button_Click(object sender, RoutedEventArgs e)
+        {
+            reset();
+        }
+
+        private void Acc_Button_Click(object sender, RoutedEventArgs e)
+        {
+            if(AccButtom.Content.Equals("Switch to Acc"))
+            {
+                AccButtom.Content = "Switch to Figure Trace";
+                myacc.start();
+            }
+            else
+            {
+                AccButtom.Content = "Switch to Acc";
+                myacc.stop();
+            }
+        }
+
+        void myacc_onReadingChanged(double x, double y, double z)
+        {
+            //Do something here;
+        }
     }
 }
