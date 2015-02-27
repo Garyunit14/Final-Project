@@ -11,6 +11,8 @@
     <Grid>
         <Button x:Name="ResetButtom" Content="Reset" HorizontalAlignment="Left" Margin="183,88,0,0" VerticalAlignment="Top" Click="Reset_Button_Click"/>
         <Button x:Name="AccButtom" Content="Switch to Acc" HorizontalAlignment="Left" Margin="165,190,0,0" VerticalAlignment="Top" Click="Acc_Button_Click" Width="207"/>
-
+      
+        <Rectangle x:Name="stage" Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="25" Margin="165,520,0,0" Stroke="Black" VerticalAlignment="Top" Width="25" ManipulationDelta="stage_ManipulationDelta"/>
+        
     </Grid>
 </Page>

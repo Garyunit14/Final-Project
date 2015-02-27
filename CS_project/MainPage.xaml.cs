@@ -31,6 +31,10 @@ namespace CS_project
         private DataReader input;
         private CppAccelerometer myacc;       //Accelerometer object
 
+        private int x , y;
+        
+
+
         
         public MainPage()
         {
@@ -45,11 +49,11 @@ namespace CS_project
             // Start connecting to Bluetooth
             DisableAllButtom();
             SetupBluetoothLink();
+            y = 0;
+            x = 0;
             myacc.onReadingChanged += myacc_onReadingChanged;
 
         }
-
-
 
         private async Task<bool> SetupBluetoothLink()
         {
@@ -179,5 +183,16 @@ namespace CS_project
         {
             //Do something here;
         }
+
+        private void stage_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+        {
+           
+           stage.Margin.ToString();
+            //concvert string to X, Y 
+            //Find the delta X,Y
+            //Send to BlueTooth
+        } 
+       
+        
     }
 }
