@@ -25,15 +25,13 @@ namespace CS_project
   
     public sealed partial class MainPage : Page
     {
-        // This is the socket we'll communicate with the FoneAstra over
+        // This is the socket we'll communicate with the gary over
         private StreamSocket s;
         private DataWriter dw;
         private DataReader input;
         private CppAccelerometer myacc;       //Accelerometer object
 
         private int x , y;
-        
-
 
         
         public MainPage()
@@ -47,11 +45,11 @@ namespace CS_project
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             // Start connecting to Bluetooth
-            DisableAllButtom();
-            SetupBluetoothLink();
-            y = 0;
-            x = 0;
-            myacc.onReadingChanged += myacc_onReadingChanged;
+            //DisableAllButton();
+           // SetupBluetoothLink();
+            EnableAllButton();
+   
+            //myacc.onReadingChanged += myacc_onReadingChanged;
 
         }
 
@@ -66,7 +64,7 @@ namespace CS_project
             // If there are no peers, then complain
             if (devices.Count == 0)
             {
-                await new MessageDialog("No bluetooth devices are paired, please pair your FoneAstra").ShowAsync();
+                await new MessageDialog("No bluetooth devices are paired, please pair your gary").ShowAsync();
 
                 // Neat little line to open the bluetooth settings
                 await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
@@ -76,13 +74,13 @@ namespace CS_project
             // Convert peers to array from strange datatype return from PeerFinder.FindAllPeersAsync()
             PeerInformation[] peers = devices.ToArray();
 
-            // Find paired peer that is the FoneAstra
-            PeerInformation peerInfo = devices.FirstOrDefault(c => c.DisplayName.Contains("FoneAstra"));
+            // Find paired peer that is the gary
+            PeerInformation peerInfo = devices.FirstOrDefault(c => c.DisplayName.Contains("gary"));
 
             // If that doesn't exist, complain!
             if (peerInfo == null)
             {
-                await new MessageDialog("No bluetooth devices are paired, please pair your FoneAstra").ShowAsync();
+                await new MessageDialog("No bluetooth devices are paired, please pair your gary").ShowAsync();
                 await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
                 return false;
             }
@@ -90,9 +88,10 @@ namespace CS_project
             // Otherwise, create our StreamSocket and connect it!
             s = new StreamSocket();
             await s.ConnectAsync(peerInfo.HostName, "1");
-            EnableAllButtom();
             dw = new DataWriter(s.OutputStream);
             input = new DataReader(s.InputStream);
+
+            reset();
             
             return true;
         }
@@ -102,11 +101,11 @@ namespace CS_project
             string ReadData;
             bool WhileLoopSwitch = true;
 
-            //Disable All buttom
-            DisableAllButtom();
+            //Disable All button
+            DisableAllButton();
 
             //Send a char to bluetooth
-            dw.WriteString("Reset");
+            dw.WriteString("Home");
             //dw.WriteByte(0x72);   // 0x72 same as "r"
             await dw.StoreAsync();
 
@@ -120,11 +119,16 @@ namespace CS_project
                
                 if (ReadData.Equals("Done") )  
                 {
-                    //Able All buttom again
-                    EnableAllButtom();
+                    //Able All button again
+                    EnableAllButton();
                     WhileLoopSwitch = false;
+                    x = 0;
+                    y = 0;
+                    Step_TextBox.Text = ""+ 10;
                 }
             }
+
+           
  
 
         }
@@ -150,49 +154,136 @@ namespace CS_project
             return line;
         }
 
-        private void EnableAllButtom()
+        private void EnableAllButton()
         {
-            ResetButtom.IsEnabled = true;
+            Home.IsEnabled = true;
+            GyroButton.IsEnabled = true;
+
+            F_Button.IsEnabled = true;
+            B_Button.IsEnabled = true;
+            R_Button.IsEnabled = true;
+            L_Button.IsEnabled = true;
+            U_Button.IsEnabled = true;
+            D_Button.IsEnabled = true;
+            Step_TextBox.IsEnabled = true;
+
+
+
         }
 
-        private void DisableAllButtom()
+        private void DisableAllButton()
         {
-            ResetButtom.IsEnabled = false;
+            Home.IsEnabled = false;
+            GyroButton.IsEnabled = false;
+
+            F_Button.IsEnabled = false;
+            B_Button.IsEnabled = false;
+            R_Button.IsEnabled = false;
+            L_Button.IsEnabled = false;
+            U_Button.IsEnabled = false;
+            D_Button.IsEnabled = false;
+            Step_TextBox.IsEnabled = false;
+
+
         }
 
-        private void Reset_Button_Click(object sender, RoutedEventArgs e)
+        private void Home_Click(object sender, RoutedEventArgs e)
         {
             reset();
         }
 
         private void Acc_Button_Click(object sender, RoutedEventArgs e)
         {
-            if(AccButtom.Content.Equals("Switch to Acc"))
+            if (GyroButton.Content.Equals("Switch to Acc"))
             {
-                AccButtom.Content = "Switch to Figure Trace";
+                GyroButton.Content = "Switch to Figure Trace";
                 myacc.start();
+                DisableAllButton();
             }
             else
             {
-                AccButtom.Content = "Switch to Acc";
+                GyroButton.Content = "Switch to Acc";
                 myacc.stop();
+                EnableAllButton();
             }
         }
 
-        void myacc_onReadingChanged(double x, double y, double z)
+        private void F_Click(object sender, RoutedEventArgs e)
+        {            
+            dw.WriteString("F" + Step_TextBox.Text  + '\n');
+            dw.StoreAsync();
+            Test.Text = "2";
+           
+        }
+        private void L_Click(object sender, RoutedEventArgs e)
         {
-            //Do something here;
+            dw.WriteString("L" + Step_TextBox.Text);
+            dw.StoreAsync();
+        }
+        private void B_Click(object sender, RoutedEventArgs e)
+        {
+            dw.WriteString("B" + Step_TextBox.Text);
+            dw.StoreAsync();
+        }
+        private void R_Click(object sender, RoutedEventArgs e)
+        {
+            dw.WriteString("R" + Step_TextBox.Text);
+            dw.StoreAsync();
+        }
+        private void U_Click(object sender, RoutedEventArgs e)
+        {
+            dw.WriteString("U");
+            dw.StoreAsync();
+        }
+        private void D_Click(object sender, RoutedEventArgs e)
+        {
+            dw.WriteString("D");
+            dw.StoreAsync();
         }
 
-        private void stage_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+        private void F_Holding(object sender, HoldingRoutedEventArgs e)
         {
-           
-           stage.Margin.ToString();
-            //concvert string to X, Y 
-            //Find the delta X,Y
-            //Send to BlueTooth
-        } 
-       
-        
+            //dw.WriteString("F" + Step_TextBox.Text);
+            //dw.StoreAsync();
+            while (true)
+            {
+                Test.Text += "1";
+            }
+
+
+        }
+        private void L_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+
+        }
+
+
+/*
+         
+        void loop() // run over and over
+        {
+          string line;
+          line = readFunction();
+  
+  
+  
+        }
+                 string readFunction()
+                 {
+                       string line = "";
+
+                      while( (a != "\n")
+                      {
+                         line +=mySerial.read();
+                      }
+  
+
+                    return line
+                }
+         */
+
+
+
+
     }
 }
