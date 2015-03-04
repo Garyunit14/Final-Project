@@ -18,6 +18,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using CppSensors;
+using Windows.UI.Input;
 
 
 namespace CS_project
@@ -32,7 +33,7 @@ namespace CS_project
         private CppAccelerometer myacc;       //Accelerometer object
 
         private int x , y;
-
+        
         
         public MainPage()
         {
@@ -45,8 +46,7 @@ namespace CS_project
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             // Start connecting to Bluetooth
-            //DisableAllButton();
-           // SetupBluetoothLink();
+            SetupBluetoothLink();
             EnableAllButton();
    
             //myacc.onReadingChanged += myacc_onReadingChanged;
@@ -105,7 +105,8 @@ namespace CS_project
             DisableAllButton();
 
             //Send a char to bluetooth
-            dw.WriteString("Home");
+            dw.WriteByte('H');
+            TestBlock.Text= "Home buttom Click";
             //dw.WriteByte(0x72);   // 0x72 same as "r"
             await dw.StoreAsync();
 
@@ -131,6 +132,29 @@ namespace CS_project
            
  
 
+        }
+        private void SendToBT( HoldingRoutedEventArgs e, char character)
+        {
+            byte Signal = (byte)'S';
+
+            if (e.HoldingState == Windows.UI.Input.HoldingState.Canceled)
+            {
+                Signal = (byte) 'S';
+                TestBlock.Text = "" + character + ": Canceled";
+            }
+            else if (e.HoldingState == Windows.UI.Input.HoldingState.Started)
+            {
+                Signal = (byte)character;
+                TestBlock.Text = "" + character + ": Started";
+            }
+            else if (e.HoldingState == Windows.UI.Input.HoldingState.Completed)
+            {
+                Signal = (byte)'S';
+                TestBlock.Text = "" + character + ": Completed";
+            }
+
+           dw.WriteByte(Signal);
+           dw.StoreAsync();
         }
 
         private async Task<string> readLine(DataReader input)
@@ -199,6 +223,9 @@ namespace CS_project
                 GyroButton.Content = "Switch to Figure Trace";
                 myacc.start();
                 DisableAllButton();
+                U_Button.IsEnabled = true;
+                D_Button.IsEnabled = true;
+
             }
             else
             {
@@ -208,62 +235,46 @@ namespace CS_project
             }
         }
 
-        private void F_Click(object sender, RoutedEventArgs e)
-        {            
-            dw.WriteString("F" + Step_TextBox.Text  + '\n');
-            dw.StoreAsync();
-            Test.Text = "2";
-           
-        }
-        private void L_Click(object sender, RoutedEventArgs e)
-        {
-            dw.WriteString("L" + Step_TextBox.Text);
-            dw.StoreAsync();
-        }
-        private void B_Click(object sender, RoutedEventArgs e)
-        {
-            dw.WriteString("B" + Step_TextBox.Text);
-            dw.StoreAsync();
-        }
-        private void R_Click(object sender, RoutedEventArgs e)
-        {
-            dw.WriteString("R" + Step_TextBox.Text);
-            dw.StoreAsync();
-        }
         private void U_Click(object sender, RoutedEventArgs e)
         {
-            dw.WriteString("U");
+            dw.WriteString('U)';
             dw.StoreAsync();
         }
         private void D_Click(object sender, RoutedEventArgs e)
         {
-            dw.WriteString("D");
+            dw.WriteString('D');
             dw.StoreAsync();
         }
 
         private void F_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            //dw.WriteString("F" + Step_TextBox.Text);
-            //dw.StoreAsync();
-            while (true)
-            {
-                Test.Text += "1";
-            }
-
-
+            SendToBT(e, 'F');
         }
         private void L_Holding(object sender, HoldingRoutedEventArgs e)
         {
-
+            SendToBT(e, 'L');
+        }
+        private void R_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            SendToBT(e, 'R');
+        }
+        private void B_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            SendToBT(e, 'B');
         }
 
 
 /*
-         
+         void Setup()
+         {
+            Serial1.begin(9600);
+ 
+         }
         void loop() // run over and over
         {
           string line;
           line = readFunction();
+
   
   
   
@@ -280,7 +291,7 @@ namespace CS_project
 
                     return line
                 }
-         */
+*/
 
 
 
