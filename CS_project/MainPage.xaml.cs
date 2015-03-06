@@ -33,7 +33,8 @@ namespace CS_project
         private DataReader input;
         private CppAccelerometer myacc;       //Accelerometer object
 
-        private int x , y;
+        byte Signal;
+
         
         
         public MainPage()
@@ -51,17 +52,27 @@ namespace CS_project
 
            myacc = new CppAccelerometer();
            EnableAllButton();
-           myacc.onReadingChanged += myacc_onReadingChanged;
            
         }
 
         void myacc_onReadingChanged(double x, double y, double z)
         {
+
+            /*
+             * (0,0,-1) flat on table
+             * 
+             * (-1,0,0) backward
+             * (1,0,0) forward
+             * 
+             * (0,1,0) Left
+             * (0,-1,0) Right
+             * 
+             */
             Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                TestBlock.Text = "x:" + x + "y" + y + "z" + z;
+                TestBlock.Text = "x:" + Math.Round(x,2) + " y: " + Math.Round(y,2) + " z: " + Math.Round(z,2);
             });
-            
+
         }
 
         private async Task<bool> SetupBluetoothLink1()
@@ -103,7 +114,6 @@ namespace CS_project
             EnableAllButton();
             return true;
         }
-
         private async Task<bool> SetupBluetoothLink()
         {
             // Tell PeerFinder that we're a pair to anyone that has been paried with us over BT
@@ -175,8 +185,6 @@ namespace CS_project
                     //Able All button again
                     EnableAllButton();
                     WhileLoopSwitch = false;
-                    x = 0;
-                    y = 0;
                     Step_TextBox.Text = ""+ 10;
                 }
             }
@@ -185,9 +193,9 @@ namespace CS_project
  
 
         }
-        private async void SendToBT_Holding(HoldingRoutedEventArgs e, char character)
+        private async void SendToBT(HoldingRoutedEventArgs e, char character)
         {
-            byte Signal = (byte)'S';
+            Signal = (byte) character;
 
             if (e.HoldingState == Windows.UI.Input.HoldingState.Canceled)
             {
@@ -205,8 +213,14 @@ namespace CS_project
                 TestBlock.Text = "" + character + ": Completed";
             }
 
-           //dw.WriteByte(0x10);
+           //dw.WriteByte(Signal);
            //await dw.StoreAsync();
+        }
+        private async void SendToBT(char character)
+        {
+            Signal = (byte) character;
+            //dw.WriteByte(Signal);
+            //await dw.StoreAsync();
         }
 
         private async Task<string> readLine(DataReader input)
@@ -229,19 +243,11 @@ namespace CS_project
             // Return the string we've built
             return line;
         }
-        private async void WriteData(Task<bool> setupOK)
-        {
-            // Wait for the setup function to finish, when it does, it returns a boolean
-            // If the boolean is false, then something failed and we shouldn't attempt to write data
 
-            if (!await setupOK)
-                return;
-
-        }
         private void EnableAllButton()
         {
             Home.IsEnabled = true;
-            GyroButton.IsEnabled = true;
+            AccButton.IsEnabled = true;
 
             F_Button.IsEnabled = true;
             B_Button.IsEnabled = true;
@@ -257,7 +263,7 @@ namespace CS_project
         private void DisableAllButton()
         {
             Home.IsEnabled = false;
-            GyroButton.IsEnabled = false;
+            //AccButton.IsEnabled = false;
 
             F_Button.IsEnabled = false;
             B_Button.IsEnabled = false;
@@ -277,19 +283,22 @@ namespace CS_project
 
         private void Acc_Button_Click(object sender, RoutedEventArgs e)
         {
-            if (GyroButton.Content.Equals("Switch to Acc"))
+            if (AccButton.Content.Equals("Switch to Acc"))
             {
-                GyroButton.Content = "Switch to Figure Trace";
-                myacc.start();
+                SendToBT('S');
+                AccButton.Content = "Switch to Button";
                 DisableAllButton();
                 U_Button.IsEnabled = true;
                 D_Button.IsEnabled = true;
+                AccButton.IsEnabled = true;
+                myacc.onReadingChanged += myacc_onReadingChanged;
 
             }
             else
             {
-                GyroButton.Content = "Switch to Acc";
-                myacc.stop();
+                SendToBT('S');
+                AccButton.Content = "Switch to Acc";
+                myacc.onReadingChanged -= myacc_onReadingChanged;
                 EnableAllButton();
             }
         }
@@ -307,19 +316,19 @@ namespace CS_project
 
         private void F_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT_Holding(e, 'F');
+            SendToBT(e, 'F');
         }
         private void L_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT_Holding(e, 'L');
+            SendToBT(e, 'L');
         }
         private void R_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT_Holding(e, 'R');
+            SendToBT(e, 'R');
         }
         private void B_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT_Holding(e, 'B');
+            SendToBT(e, 'B');
         }
 
     }
