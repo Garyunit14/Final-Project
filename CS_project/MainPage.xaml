@@ -11,14 +11,14 @@
     <Grid x:Name="R_Buttom">
         <Button x:Name="Home" Content="Home" HorizontalAlignment="Left" Margin="10,1,0,0" VerticalAlignment="Top" Click="Home_Click" IsEnabled="False"/>
         <Button x:Name="GyroButton" Content="Switch to GYRO" HorizontalAlignment="Left" Margin="182,1,0,0" VerticalAlignment="Top" Click="Acc_Button_Click" Width="207" IsEnabled="False"/>
-        <Button x:Name="F_Button" Content="F" HorizontalAlignment="Left" Margin="155,95,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" Holding="F_Holding" IsEnabled="False"/>
-        <Button x:Name="B_Button" Content="B" HorizontalAlignment="Left" Margin="155,172,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Holding="B_Holding"/>
+        <Button x:Name="F_Button" Content="F" HorizontalAlignment="Left" Margin="155,95,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" Holding="F_Holding" IsEnabled="False" />
+        <Button x:Name="B_Button" Content="B" HorizontalAlignment="Left" Margin="155,172,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Holding="B_Holding" />
         <Button x:Name="L_Button" Content="L" HorizontalAlignment="Left" Margin="63,139,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Holding="L_Holding"/>
-        <Button x:Name="R_Button" Content="R" HorizontalAlignment="Left" Margin="248,139,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Holding="R_Holding"/>
-        <Button x:Name="U_Button" Content="U" HorizontalAlignment="Left" Margin="399,61,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Click="U_Click"/>
-        <Button x:Name="D_Button" Content="D" HorizontalAlignment="Left" Margin="399,139,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Click="D_Click"/>
-        <TextBox x:Name="Step_TextBox" HorizontalAlignment="Left" Margin="321,308,0,0" TextWrapping="Wrap" Text="10" VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Left" Margin="251,316,0,0" TextWrapping="Wrap" Text="Step:" VerticalAlignment="Top" FontSize="20"/>
+        <Button x:Name="R_Button" Content="R" HorizontalAlignment="Left" Margin="248,139,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Holding="R_Holding" />
+        <Button x:Name="U_Button" Content="U" HorizontalAlignment="Left" Margin="399,61,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Click="U_Click" ClickMode="Press"/>
+        <Button x:Name="D_Button" Content="D" HorizontalAlignment="Left" Margin="399,139,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Click="D_Click" ClickMode="Press"/>
+        <TextBox x:Name="Step_TextBox" HorizontalAlignment="Left" Margin="319,308,0,0" TextWrapping="Wrap" Text="10" VerticalAlignment="Top" Width="59" InputScope="Number"/>
+        <TextBlock HorizontalAlignment="Left" Margin="214,314,0,0" TextWrapping="Wrap" Text="Step[mm]:" VerticalAlignment="Top" FontSize="20"/>
         <TextBlock x:Name="TestBlock" HorizontalAlignment="Left" Margin="63,308,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" FontSize="20"/>
     </Grid>
 </Page>

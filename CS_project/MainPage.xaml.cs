@@ -19,6 +19,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using CppSensors;
 using Windows.UI.Input;
+using Windows.UI.Core;
 
 
 namespace CS_project
@@ -26,7 +27,7 @@ namespace CS_project
   
     public sealed partial class MainPage : Page
     {
-        // This is the socket we'll communicate with the gary over
+        // This is the socket we'll communicate with the gary  over
         private StreamSocket s;
         private DataWriter dw;
         private DataReader input;
@@ -46,14 +47,24 @@ namespace CS_project
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             // Start connecting to Bluetooth
-            SetupBluetoothLink();
-            EnableAllButton();
-   
-            //myacc.onReadingChanged += myacc_onReadingChanged;
+            //SetupBluetoothLink1();
 
+           myacc = new CppAccelerometer();
+           EnableAllButton();
+           myacc.onReadingChanged += myacc_onReadingChanged;
+           
         }
 
-        private async Task<bool> SetupBluetoothLink()
+        void myacc_onReadingChanged(double x, double y, double z)
+        {
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                TestBlock.Text = "x:" + x + "y" + y + "z" + z;
+            });
+            
+        }
+
+        private async Task<bool> SetupBluetoothLink1()
         {
             // Tell PeerFinder that we're a pair to anyone that has been paried with us over BT
             PeerFinder.AlternateIdentities["Bluetooth:PAIRED"] = "";
@@ -89,10 +100,51 @@ namespace CS_project
             s = new StreamSocket();
             await s.ConnectAsync(peerInfo.HostName, "1");
             dw = new DataWriter(s.OutputStream);
+            EnableAllButton();
+            return true;
+        }
+
+        private async Task<bool> SetupBluetoothLink()
+        {
+            // Tell PeerFinder that we're a pair to anyone that has been paried with us over BT
+            PeerFinder.AlternateIdentities["Bluetooth:PAIRED"] = "";
+
+            // Find all peers
+            var devices = await PeerFinder.FindAllPeersAsync();
+
+            // If there are no peers, then complain
+            if (devices.Count == 0)
+            {
+                await new MessageDialog("No bluetooth devices are paired, please pair your gary ").ShowAsync();
+
+                // Neat little line to open the bluetooth settings
+                await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
+                return false;
+            }
+
+            // Convert peers to array from strange datatype return from PeerFinder.FindAllPeersAsync()
+            PeerInformation[] peers = devices.ToArray();
+
+            // Find paired peer that is the gary 
+            PeerInformation peerInfo = devices.FirstOrDefault(c => c.DisplayName.Contains("gary"));
+
+            // If that doesn't exist, complain!
+            if (peerInfo == null)
+            {
+                await new MessageDialog("No bluetooth devices are paired, please pair your gary ").ShowAsync();
+                await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
+                return false;
+            }
+
+            // Otherwise, create our StreamSocket and connect it!
+            s = new StreamSocket();
+            await s.ConnectAsync(peerInfo.HostName, "1");
+            dw = new DataWriter(s.OutputStream);
             input = new DataReader(s.InputStream);
 
-            reset();
-            
+            //reset();
+            EnableAllButton();
+
             return true;
         }
 
@@ -105,7 +157,7 @@ namespace CS_project
             DisableAllButton();
 
             //Send a char to bluetooth
-            dw.WriteByte('H');
+            dw.WriteByte((byte) 'H');
             TestBlock.Text= "Home buttom Click";
             //dw.WriteByte(0x72);   // 0x72 same as "r"
             await dw.StoreAsync();
@@ -133,7 +185,7 @@ namespace CS_project
  
 
         }
-        private void SendToBT( HoldingRoutedEventArgs e, char character)
+        private async void SendToBT_Holding(HoldingRoutedEventArgs e, char character)
         {
             byte Signal = (byte)'S';
 
@@ -153,8 +205,8 @@ namespace CS_project
                 TestBlock.Text = "" + character + ": Completed";
             }
 
-           dw.WriteByte(Signal);
-           dw.StoreAsync();
+           //dw.WriteByte(0x10);
+           //await dw.StoreAsync();
         }
 
         private async Task<string> readLine(DataReader input)
@@ -177,7 +229,15 @@ namespace CS_project
             // Return the string we've built
             return line;
         }
+        private async void WriteData(Task<bool> setupOK)
+        {
+            // Wait for the setup function to finish, when it does, it returns a boolean
+            // If the boolean is false, then something failed and we shouldn't attempt to write data
 
+            if (!await setupOK)
+                return;
+
+        }
         private void EnableAllButton()
         {
             Home.IsEnabled = true;
@@ -194,7 +254,6 @@ namespace CS_project
 
 
         }
-
         private void DisableAllButton()
         {
             Home.IsEnabled = false;
@@ -235,66 +294,35 @@ namespace CS_project
             }
         }
 
-        private void U_Click(object sender, RoutedEventArgs e)
+        private async void U_Click(object sender, RoutedEventArgs e)
         {
-            dw.WriteString('U)';
-            dw.StoreAsync();
+            dw.WriteByte((byte) 'U');
+            await dw.StoreAsync();
         }
-        private void D_Click(object sender, RoutedEventArgs e)
+        private async void D_Click(object sender, RoutedEventArgs e)
         {
-            dw.WriteString('D');
-            dw.StoreAsync();
+            dw.WriteByte((byte) 'D');
+            await dw.StoreAsync();
         }
 
         private void F_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT(e, 'F');
+            SendToBT_Holding(e, 'F');
         }
         private void L_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT(e, 'L');
+            SendToBT_Holding(e, 'L');
         }
         private void R_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT(e, 'R');
+            SendToBT_Holding(e, 'R');
         }
         private void B_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT(e, 'B');
+            SendToBT_Holding(e, 'B');
         }
-
-
-/*
-         void Setup()
-         {
-            Serial1.begin(9600);
- 
-         }
-        void loop() // run over and over
-        {
-          string line;
-          line = readFunction();
-
-  
-  
-  
-        }
-                 string readFunction()
-                 {
-                       string line = "";
-
-                      while( (a != "\n")
-                      {
-                         line +=mySerial.read();
-                      }
-  
-
-                    return line
-                }
-*/
-
-
-
 
     }
+
+
 }
