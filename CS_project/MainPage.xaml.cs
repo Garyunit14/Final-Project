@@ -20,6 +20,7 @@ using Windows.UI.Xaml.Navigation;
 using CppSensors;
 using Windows.UI.Input;
 using Windows.UI.Core;
+using System.Text;
 
 
 namespace CS_project
@@ -33,10 +34,24 @@ namespace CS_project
         private DataReader input;
         private CppAccelerometer myacc;       //Accelerometer object
 
-        byte Signal;
+        private byte Signal = 0;
+        private byte stop = 0;
+        private byte F = 32;
+        private byte R = 64;
+        private byte B = 96;
+        private byte L = 128;
+        private byte U = 160;
+        private byte D = 192;
+        private byte H = 224;
 
-        
-        
+        private byte Speed1 = 2;
+        private byte Speed2 = 4;
+        private byte Speed3 = 8;
+        private byte Speed4 = 16;
+        private byte[] Speed;
+
+        private Int16 UserSpeed = 0;
+
         public MainPage()
         {
             this.InitializeComponent();
@@ -50,9 +65,9 @@ namespace CS_project
             // Start connecting to Bluetooth
             //SetupBluetoothLink1();
 
+           Speed = new byte[] {0,Speed1,Speed2,Speed3,Speed4};
            myacc = new CppAccelerometer();
            EnableAllButton();
-           
         }
 
         void myacc_onReadingChanged(double x, double y, double z)
@@ -66,11 +81,14 @@ namespace CS_project
              * 
              * (0,1,0) Left
              * (0,-1,0) Right
-             * 
+             *
              */
+            byte Temp_byte= SendToBT(x, y, z);
+
             Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                TestBlock.Text = "x:" + Math.Round(x,2) + " y: " + Math.Round(y,2) + " z: " + Math.Round(z,2);
+                Acc_TestBlock2.Text = PrintDirection(Temp_byte) + " With Speed of " + UserSpeed;
+                Acc_TestBlock.Text = "x: " + Math.Round(x,2) + " y: " + Math.Round(y,2) + " z: " + Math.Round(z,2);
             });
 
         }
@@ -167,9 +185,8 @@ namespace CS_project
             DisableAllButton();
 
             //Send a char to bluetooth
-            dw.WriteByte((byte) 'H');
+            dw.WriteByte(H);
             TestBlock.Text= "Home buttom Click";
-            //dw.WriteByte(0x72);   // 0x72 same as "r"
             await dw.StoreAsync();
 
             
@@ -182,10 +199,12 @@ namespace CS_project
                
                 if (ReadData.Equals("Done") )  
                 {
+                    Signal = 0;
+                    UserSpeed = 0;
                     //Able All button again
                     EnableAllButton();
                     WhileLoopSwitch = false;
-                    Step_TextBox.Text = ""+ 10;
+                    Step_TextBox.Text = ""+ 1;
                 }
             }
 
@@ -193,34 +212,157 @@ namespace CS_project
  
 
         }
-        private async void SendToBT(HoldingRoutedEventArgs e, char character)
+
+        private async void SendToBT(HoldingRoutedEventArgs e, byte direction , Int16 speed)
         {
-            Signal = (byte) character;
+            Signal = 0;
 
             if (e.HoldingState == Windows.UI.Input.HoldingState.Canceled)
             {
-                Signal = (byte) 'S';
-                TestBlock.Text = "" + character + ": Canceled";
+                Signal = stop;
+                TestBlock.Text = PrintDirection(Signal) + ": Canceled";
             }
             else if (e.HoldingState == Windows.UI.Input.HoldingState.Started)
             {
-                Signal = (byte)character;
-                TestBlock.Text = "" + character + ": Started";
+                Signal = (byte)(direction + Speed[speed -1]);
+                TestBlock.Text = PrintDirection(direction) + ": Started with " + PrintSpeed( Speed[speed]);
             }
             else if (e.HoldingState == Windows.UI.Input.HoldingState.Completed)
             {
-                Signal = (byte)'S';
-                TestBlock.Text = "" + character + ": Completed";
+                Signal = stop;
+                TestBlock.Text = PrintDirection(Signal) + ": Completed";
             }
 
            //dw.WriteByte(Signal);
            //await dw.StoreAsync();
         }
-        private async void SendToBT(char character)
+        private async void SendToBT(byte direction)
         {
-            Signal = (byte) character;
-            //dw.WriteByte(Signal);
+            //dw.WriteByte(direction);
             //await dw.StoreAsync();
+        }
+        private byte SendToBT(Double x, Double y, Double z)
+        {
+            Signal = 0;
+            Byte Direction = 0 ;
+
+            if(z <= 0.0) // phone is upward
+            {
+                if (Math.Abs(x) < 0.2 && Math.Abs(y) < 0.2)  // Stop
+                {
+                    Signal = stop;
+                }
+                else if( x > 0.2 && Math.Abs(y) < 0.5)  //forward
+                {
+                    Direction = F;
+                    UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(x)/0.2 , 0) - 1);
+                    Signal = (byte) (F + Speed[UserSpeed]); // forward direction
+                }
+                else if(Math.Abs(x) < 0.5 && y < -0.2)   //Right
+                {
+                    Direction = R;
+                    UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(y)/0.2 , 0) - 1);
+                    Signal =  (byte) (R + Speed[UserSpeed]);         
+                }
+                else if (x < -0.2 && Math.Abs(y) < 0.5)  //Back
+                {
+                    Direction = B;
+                    UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(x)/0.2 , 0) - 1);
+                    Signal = (byte) (B + Speed[UserSpeed]);
+                }
+                else if (Math.Abs(x) < 0.2 && y > 0.2)  //Left
+                {
+                    Direction = L;
+                    UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(y)/0.2 , 0) - 1);
+                    Signal = (byte) (L + Speed[UserSpeed]);
+                }
+
+            }
+            else  // phone face downward
+            {
+                    Signal = 0;   // then stop
+            }
+
+            SendToBT(Signal);
+            return Direction;
+
+        }
+
+        private string PrintDirection(byte direction)
+        {
+             String Command = System.String.Empty;
+             
+             switch (direction)
+             {
+                 case 0: //Stop
+                     Command = "Stop";
+                     break;
+
+                 case  32: //Forward
+                    Command= "Forward  x: 0, y: 0, z: 0";
+                    break;
+
+                 case 64: //Right
+                    Command = "Right  x: 0, y: -1, z: 0";
+                    break;
+
+                 case 96: //Back
+                     Command = "Back  x: -1, y: 0, z: 0" ;
+                     break;
+
+                 case 128: //Left
+                     Command = "Left  x: 0, y: 1, z: 0";
+                     break;
+
+                 case 160:
+                     Command = "UP";
+                     break;
+
+                 case 192:
+                     Command="DOWN";
+                     break;
+
+
+                default: 
+                    Command = "";
+                    break;
+                    
+            }
+
+             return Command;
+        }
+        private string PrintSpeed(byte speed)
+        {
+            String Command = System.String.Empty;
+
+             switch (speed)
+             {
+                 case 0:
+                     Command = "No Speed";
+                     break;
+
+                 case  2:
+                    Command= "Speed of 1";
+                    break;
+
+                 case 4:
+                    Command = "Speed of 2";
+                    break;
+
+                 case 8:
+                     Command = "Speed of 3" ;
+                     break;
+
+                 case 16:
+                     Command = "Speed of 4";
+                     break;
+
+                default:
+                     Command = "";
+                    break;
+                    
+            }
+            return Command;
         }
 
         private async Task<string> readLine(DataReader input)
@@ -257,8 +399,6 @@ namespace CS_project
             D_Button.IsEnabled = true;
             Step_TextBox.IsEnabled = true;
 
-
-
         }
         private void DisableAllButton()
         {
@@ -285,7 +425,7 @@ namespace CS_project
         {
             if (AccButton.Content.Equals("Switch to Acc"))
             {
-                SendToBT('S');
+                SendToBT(stop);
                 AccButton.Content = "Switch to Button";
                 DisableAllButton();
                 U_Button.IsEnabled = true;
@@ -296,41 +436,117 @@ namespace CS_project
             }
             else
             {
-                SendToBT('S');
+                SendToBT(stop);
                 AccButton.Content = "Switch to Acc";
                 myacc.onReadingChanged -= myacc_onReadingChanged;
                 EnableAllButton();
             }
         }
 
-        private async void U_Click(object sender, RoutedEventArgs e)
+        private void U_Click(object sender, RoutedEventArgs e)
         {
-            dw.WriteByte((byte) 'U');
-            await dw.StoreAsync();
+            SendToBT(U);
+            TestBlock.Text = PrintDirection(U) + ": Clicked";
+            
         }
-        private async void D_Click(object sender, RoutedEventArgs e)
+        private void D_Click(object sender, RoutedEventArgs e)
         {
-            dw.WriteByte((byte) 'D');
-            await dw.StoreAsync();
+            SendToBT(D);
+            TestBlock.Text = PrintDirection(D) + ": Clicked";
         }
 
         private void F_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT(e, 'F');
+            try
+            {
+               if( CheckValue(Convert.ToByte(Step_TextBox.Text)) )
+               {
+                    UserSpeed = Convert.ToInt16(Step_TextBox.Text);
+                    SendToBT(e, F,UserSpeed);
+               }
+               else 
+               {
+                   Display.Text = "Please type in 1 ~ 4 Number";
+               }
+
+            }
+            catch
+            {
+                Display.Text = "Please type in Valid Value";
+            }
+
         }
         private void L_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT(e, 'L');
+            try
+            {
+               if( CheckValue(Convert.ToByte(Step_TextBox.Text)) )
+               {
+                    UserSpeed = Convert.ToInt16(Step_TextBox.Text);
+                    SendToBT(e, L,UserSpeed);
+               }
+               else
+               {
+                   Display.Text = "Please type in 1 ~ 4 Number";
+               }
+
+            }
+            catch
+            {
+                Display.Text = "Please type in Valid Value";
+            }
         }
         private void R_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT(e, 'R');
+            try
+            {
+               if( CheckValue(Convert.ToByte(Step_TextBox.Text)) )
+               {
+                    UserSpeed = Convert.ToInt16(Step_TextBox.Text);
+                    SendToBT(e, R,UserSpeed);
+               }
+               else
+               {
+                   Display.Text = "Please type in 1 ~ 4 Number";
+               }
+
+            }
+            catch
+            {
+                Display.Text = "Please type in Valid Value";
+            }
         }
         private void B_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            SendToBT(e, 'B');
-        }
+            try
+            {
+               if( CheckValue(Convert.ToByte(Step_TextBox.Text)) )
+               {
+                    UserSpeed = Convert.ToInt16(Step_TextBox.Text);
+                    SendToBT(e, B,UserSpeed);
+               }
+               else
+               {
+                   Display.Text = "Please type in 1 ~ 4 Number";
+               }
 
+            }
+            catch
+            {
+                Display.Text = "Please type in Valid Value";
+            }
+        }
+        private bool CheckValue(byte number)
+        {
+            if (number >= 1 && number <= 4)
+            {  //1 <= number <= 4
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 
 
