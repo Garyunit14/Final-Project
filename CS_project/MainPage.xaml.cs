@@ -28,13 +28,14 @@ namespace CS_project
   
     public sealed partial class MainPage : Page
     {
-        // This is the socket we'll communicate with the gary  over
+        // This is the socket we'll communicate with the DavidBT  over
         private StreamSocket s;
         private DataWriter dw;
         private DataReader input;
         private CppAccelerometer myacc;       //Accelerometer object
 
         private byte Signal = 0;
+
         private byte stop = 0;
         private byte F = 32;
         private byte R = 64;
@@ -43,12 +44,6 @@ namespace CS_project
         private byte U = 160;
         private byte D = 192;
         private byte H = 224;
-
-        private byte Speed1 = 2;
-        private byte Speed2 = 4;
-        private byte Speed3 = 8;
-        private byte Speed4 = 16;
-        private byte[] Speed;
 
         private Int16 UserSpeed = 0;
 
@@ -63,18 +58,18 @@ namespace CS_project
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             // Start connecting to Bluetooth
-            //SetupBluetoothLink1();
+            ReadData(SetupBluetoothLink_David());
 
-           Speed = new byte[] {0,Speed1,Speed2,Speed3,Speed4};
            myacc = new CppAccelerometer();
-           EnableAllButton();
+           
+           //EnableAllButton();
         }
 
         void myacc_onReadingChanged(double x, double y, double z)
         {
 
             /*
-             * (0,0,-1) flat on table
+             * (0,0,-1) flat on table 
              * 
              * (-1,0,0) backward
              * (1,0,0) forward
@@ -83,10 +78,19 @@ namespace CS_project
              * (0,-1,0) Right
              *
              */
+
             byte Temp_byte= SendToBT(x, y, z);
+            
+/*      
+            await input.LoadAsync(4);
+            input.ReadBytes(byteBuffer);
+            int length = BitConverter.ToInt32(byteBuffer, 0);
+*/
+            
 
             Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
+                TestBlock.Text = 
                 Acc_TestBlock2.Text = PrintDirection(Temp_byte) + " With Speed of " + UserSpeed;
                 Acc_TestBlock.Text = "x: " + Math.Round(x,2) + " y: " + Math.Round(y,2) + " z: " + Math.Round(z,2);
             });
@@ -104,7 +108,7 @@ namespace CS_project
             // If there are no peers, then complain
             if (devices.Count == 0)
             {
-                await new MessageDialog("No bluetooth devices are paired, please pair your gary").ShowAsync();
+                await new MessageDialog("No bluetooth devices are paired, please pair your DavidBT").ShowAsync();
 
                 // Neat little line to open the bluetooth settings
                 await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
@@ -114,21 +118,22 @@ namespace CS_project
             // Convert peers to array from strange datatype return from PeerFinder.FindAllPeersAsync()
             PeerInformation[] peers = devices.ToArray();
 
-            // Find paired peer that is the gary
-            PeerInformation peerInfo = devices.FirstOrDefault(c => c.DisplayName.Contains("gary"));
+            // Find paired peer that is the DavidBT
+            PeerInformation peerInfo = devices.FirstOrDefault(c => c.DisplayName.Contains("DavidBT"));
 
             // If that doesn't exist, complain!
             if (peerInfo == null)
             {
-                await new MessageDialog("No bluetooth devices are paired, please pair your gary").ShowAsync();
+                await new MessageDialog("No bluetooth devices are paired, please pair your DavidBT").ShowAsync();
                 await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
                 return false;
             }
 
             // Otherwise, create our StreamSocket and connect it!
             s = new StreamSocket();
-            await s.ConnectAsync(peerInfo.HostName, "1");
             dw = new DataWriter(s.OutputStream);
+            await s.ConnectAsync(peerInfo.HostName, "1");
+
             EnableAllButton();
             return true;
         }
@@ -143,7 +148,7 @@ namespace CS_project
             // If there are no peers, then complain
             if (devices.Count == 0)
             {
-                await new MessageDialog("No bluetooth devices are paired, please pair your gary ").ShowAsync();
+                await new MessageDialog("No bluetooth devices are paired, please pair your DavidBT ").ShowAsync();
 
                 // Neat little line to open the bluetooth settings
                 await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
@@ -153,13 +158,13 @@ namespace CS_project
             // Convert peers to array from strange datatype return from PeerFinder.FindAllPeersAsync()
             PeerInformation[] peers = devices.ToArray();
 
-            // Find paired peer that is the gary 
-            PeerInformation peerInfo = devices.FirstOrDefault(c => c.DisplayName.Contains("gary"));
+            // Find paired peer that is the DavidBT 
+            PeerInformation peerInfo = devices.FirstOrDefault(c => c.DisplayName.Contains("DavidBT"));
 
             // If that doesn't exist, complain!
             if (peerInfo == null)
             {
-                await new MessageDialog("No bluetooth devices are paired, please pair your gary ").ShowAsync();
+                await new MessageDialog("No bluetooth devices are paired, please pair your DavidBT ").ShowAsync();
                 await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
                 return false;
             }
@@ -175,7 +180,48 @@ namespace CS_project
 
             return true;
         }
+        private async Task<bool> SetupBluetoothLink_David()
+        {
+            // Tell PeerFinder that we're a pair to anyone that has been paried with us over BT
+            PeerFinder.AlternateIdentities["Bluetooth:PAIRED"] = "";
 
+            // Find all peers
+            var devices = await PeerFinder.FindAllPeersAsync();
+
+            // If there are no peers, then complain
+            if (devices.Count == 0)
+            {
+                await new MessageDialog("No bluetooth devices are paired, please pair your DavidBT").ShowAsync();
+
+                // Neat little line to open the bluetooth settings
+                await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
+                return false;
+            }
+
+            // Convert peers to array from strange datatype return from PeerFinder.FindAllPeersAsync()
+            PeerInformation[] peers = devices.ToArray();
+
+            // Find paired peer that is the DavidBT
+            PeerInformation peerInfo = devices.FirstOrDefault(c => c.DisplayName.Contains("DavidBT"));
+
+            // If that doesn't exist, complain!
+            if (peerInfo == null)
+            {
+                await new MessageDialog("No bluetooth devices are paired, please pair your DavidBT").ShowAsync();
+                await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings-bluetooth:"));
+                return false;
+            }
+
+            // Otherwise, create our StreamSocket and connect it!
+            s = new StreamSocket();
+
+            // Construct a dataReader so we can read junk in
+            dw = new DataWriter(s.OutputStream);
+            await s.ConnectAsync(peerInfo.HostName, "1");
+            EnableAllButton();
+
+            return true;
+        }
         private async void reset()
         {
             string ReadData;
@@ -224,8 +270,8 @@ namespace CS_project
             }
             else if (e.HoldingState == Windows.UI.Input.HoldingState.Started)
             {
-                Signal = (byte)(direction + Speed[speed -1]);
-                TestBlock.Text = PrintDirection(direction) + ": Started with " + PrintSpeed( Speed[speed]);
+                Signal = (byte)(direction + speed);
+                TestBlock.Text = PrintDirection(direction) + ": Started with " + PrintSpeed( speed);
             }
             else if (e.HoldingState == Windows.UI.Input.HoldingState.Completed)
             {
@@ -233,13 +279,13 @@ namespace CS_project
                 TestBlock.Text = PrintDirection(Signal) + ": Completed";
             }
 
-           //dw.WriteByte(Signal);
-           //await dw.StoreAsync();
+           dw.WriteByte(Signal);
+           await dw.StoreAsync();
         }
         private async void SendToBT(byte direction)
         {
-            //dw.WriteByte(direction);
-            //await dw.StoreAsync();
+            dw.WriteByte(direction);
+            await dw.StoreAsync();
         }
         private byte SendToBT(Double x, Double y, Double z)
         {
@@ -248,39 +294,43 @@ namespace CS_project
 
             if(z <= 0.0) // phone is upward
             {
-                if (Math.Abs(x) < 0.2 && Math.Abs(y) < 0.2)  // Stop
+                if (Math.Abs(x) <= 0.225 && Math.Abs(y) <= 0.225)  // Stop
                 {
                     Signal = stop;
                 }
-                else if( x > 0.2 && Math.Abs(y) < 0.5)  //forward
+                else if( x > 0.225 && Math.Abs(y) < 0.5)  //forward
                 {
                     Direction = F;
-                    UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(x)/0.2 , 0) - 1);
-                    Signal = (byte) (F + Speed[UserSpeed]); // forward direction
+                    //UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(x)/0.05 , 2) - 1);
+                    UserSpeed = Convert.ToInt16(Math.Round((Math.Abs(x) * 40 - 8),0));
+                    Signal = (byte) (F + UserSpeed); // forward direction
                 }
-                else if(Math.Abs(x) < 0.5 && y < -0.2)   //Right
+                else if(Math.Abs(x) < 0.5 && y < -0.225)   //Right
                 {
                     Direction = R;
-                    UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(y)/0.2 , 0) - 1);
-                    Signal =  (byte) (R + Speed[UserSpeed]);         
+                    //UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(y)/0.2 , 0) - 1);
+                    UserSpeed = Convert.ToInt16(Math.Round((Math.Abs(y) * 40 - 8), 0));
+                    Signal =  (byte) (R + UserSpeed);         
                 }
-                else if (x < -0.2 && Math.Abs(y) < 0.5)  //Back
+                else if (x < -0.225 && Math.Abs(y) < 0.5)  //Back
                 {
                     Direction = B;
-                    UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(x)/0.2 , 0) - 1);
-                    Signal = (byte) (B + Speed[UserSpeed]);
+                    //UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(x)/0.2 , 0) - 1);
+                    UserSpeed = Convert.ToInt16(Math.Round((Math.Abs(x) * 40 - 8), 0));
+                    Signal = (byte) (B + UserSpeed);
                 }
-                else if (Math.Abs(x) < 0.2 && y > 0.2)  //Left
+                else if (Math.Abs(x) < 0.5 && y > 0.225)  //Left
                 {
                     Direction = L;
-                    UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(y)/0.2 , 0) - 1);
-                    Signal = (byte) (L + Speed[UserSpeed]);
+                    //UserSpeed = Convert.ToInt16( Math.Round( Math.Abs(y)/0.2 , 0) - 1);
+                    UserSpeed = Convert.ToInt16(Math.Round((Math.Abs(y) * 40 - 8), 0));
+                    Signal = (byte) (L + UserSpeed);
                 }
 
             }
             else  // phone face downward
             {
-                    Signal = 0;   // then stop
+                    Signal = stop;   // then stop
             }
 
             SendToBT(Signal);
@@ -331,7 +381,7 @@ namespace CS_project
 
              return Command;
         }
-        private string PrintSpeed(byte speed)
+        private string PrintSpeed(Int16 speed)
         {
             String Command = System.String.Empty;
 
@@ -341,20 +391,68 @@ namespace CS_project
                      Command = "No Speed";
                      break;
 
+                 case 1:
+                     Command = "Speed of 1";
+                     break;
+
                  case  2:
-                    Command= "Speed of 1";
+                    Command= "Speed of 2";
+                    break;
+
+                 case 3:
+                    Command = "Speed of 3";
                     break;
 
                  case 4:
-                    Command = "Speed of 2";
+                    Command = "Speed of 4";
+                    break;
+
+                 case 5:
+                    Command = "Speed of 5";
+                    break;
+
+                 case 6:
+                    Command = "Speed of 6";
+                    break;
+
+                 case 7:
+                    Command = "Speed of 7";
                     break;
 
                  case 8:
-                     Command = "Speed of 3" ;
+                    Command = "Speed of 8";
+                    break;
+
+                 case 9:
+                     Command = "Speed of 9" ;
+                     break;
+
+                 case 10:
+                     Command = "Speed of 10";
+                     break;
+
+                 case 11:
+                     Command = "Speed of 11";
+                     break;
+
+                 case 12:
+                     Command = "Speed of 12";
+                     break;
+
+                 case 13:
+                     Command = "Speed of 13";
+                     break;
+
+                 case 14:
+                     Command = "Speed of 14";
+                     break;
+
+                 case 15:
+                     Command = "Speed of 15";
                      break;
 
                  case 16:
-                     Command = "Speed of 4";
+                     Command = "Speed of 16";
                      break;
 
                 default:
@@ -384,6 +482,26 @@ namespace CS_project
 
             // Return the string we've built
             return line;
+        }
+        private async void ReadData(Task<bool> setupOK)
+        {
+            // Wait for the setup function to finish, when it does, it returns a boolean
+            // If the boolean is false, then something failed and we shouldn't attempt to read data
+            if (!await setupOK)
+                return;
+
+            // Construct a dataReader so we can read junk in
+            DataReader input = new DataReader(s.InputStream);
+
+            // Loop forever
+            while (true)
+            {
+                // Read a line from the input, once again using await to translate a "Task<xyz>" to an "xyz"
+                string line = (await readLine(input));
+
+                // Append that line to our TextOutput
+                TestBlock.Text += line + "\n";
+            }
         }
 
         private void EnableAllButton()
@@ -466,7 +584,7 @@ namespace CS_project
                }
                else 
                {
-                   Display.Text = "Please type in 1 ~ 4 Number";
+                   Display.Text = "Please type in 1 ~ 16 Number";
                }
 
             }
@@ -487,7 +605,7 @@ namespace CS_project
                }
                else
                {
-                   Display.Text = "Please type in 1 ~ 4 Number";
+                   Display.Text = "Please type in 1 ~ 16 Number";
                }
 
             }
@@ -507,7 +625,7 @@ namespace CS_project
                }
                else
                {
-                   Display.Text = "Please type in 1 ~ 4 Number";
+                   Display.Text = "Please type in 1 ~ 16 Number";
                }
 
             }
@@ -527,7 +645,7 @@ namespace CS_project
                }
                else
                {
-                   Display.Text = "Please type in 1 ~ 4 Number";
+                   Display.Text = "Please type in 1 ~ 16 Number";
                }
 
             }
@@ -538,8 +656,8 @@ namespace CS_project
         }
         private bool CheckValue(byte number)
         {
-            if (number >= 1 && number <= 4)
-            {  //1 <= number <= 4
+            if (number >= 1 && number <= 16)
+            {  //1 <= number <= 16
                 return true;
             }
             else

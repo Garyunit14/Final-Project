@@ -18,7 +18,7 @@
         <Button x:Name="U_Button" Content="U" HorizontalAlignment="Left" Margin="399,61,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Click="U_Click" ClickMode="Press"/>
         <Button x:Name="D_Button" Content="D" HorizontalAlignment="Left" Margin="399,139,0,0" VerticalAlignment="Top" Width="75" Height="75" MinWidth="0" MinHeight="0" IsEnabled="False" Click="D_Click" ClickMode="Press"/>
         <TextBox x:Name="Step_TextBox" HorizontalAlignment="Left" Margin="399,301,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="59" InputScope="Number"/>
-        <TextBlock HorizontalAlignment="Left" Margin="248,307,0,0" TextWrapping="Wrap" Text="Speed[1~4] :" VerticalAlignment="Top" FontSize="22" Height="33" Width="141"/>
+        <TextBlock HorizontalAlignment="Left" Margin="248,307,0,0" TextWrapping="Wrap" Text="Speed[1~16] :" VerticalAlignment="Top" FontSize="22" Height="33" Width="141"/>
         <TextBlock x:Name="TestBlock" HorizontalAlignment="Left" Margin="56,248,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" FontSize="20" Width="453"/>
         <TextBlock x:Name="Acc_TestBlock" HorizontalAlignment="Left" Margin="56,277,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" FontSize="20" Width="453"/>
         <TextBlock x:Name="Acc_TestBlock2" HorizontalAlignment="Left" Margin="10,301,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" FontSize="16" Width="238" Height="89"/>
